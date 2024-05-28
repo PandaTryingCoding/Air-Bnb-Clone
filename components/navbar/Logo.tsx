@@ -1,5 +1,5 @@
 import React from "react";
-import { LuWarehouse } from "react-icons/lu";
+import { BsBuildings } from "react-icons/bs";
 import Link from "next/link";
 import { Button } from "../ui/button";
 
@@ -7,7 +7,7 @@ function Logo() {
   return (
     <Button size='icon' asChild>
       <Link href='/'>
-        <LuWarehouse className='w-6 h-6' />
+        <BsBuildings className='w-6 h-6' />
       </Link>
     </Button>
   );
