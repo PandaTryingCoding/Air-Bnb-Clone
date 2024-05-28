@@ -3,7 +3,7 @@ import FormContainer from "@/components/form/FormContainer";
 import FormInput from "@/components/form/FormInput";
 import { createProfileAction } from "@/utils/actions";
 
-function ProfilePage() {
+function CreateProfile() {
   return (
     <section>
       <h1 className='text-2xl f0nt-semibold mb-8 capitalize'>New User</h1>
@@ -21,4 +21,4 @@ function ProfilePage() {
   );
 }
 
-export default ProfilePage;
+export default CreateProfile;
