@@ -1,6 +1,6 @@
 "use server";
 
-import { profileSchema } from "./schemas";
+import { profileSchema, validateWithZodSchema } from "./schemas";
 import db from "./db";
 import { clerkClient, currentUser, auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -31,7 +31,7 @@ export const createProfileAction = async (
     if (!user) throw new Error("Please login to create a new Profile!");
 
     const rawData = Object.fromEntries(formData);
-    const validatedFields = profileSchema.parse(rawData);
+    const validatedFields = validateWithZodSchema(profileSchema, rawData);
 
     await db.profile.create({
       data: {
@@ -53,19 +53,22 @@ export const createProfileAction = async (
 };
 
 export const fetchProfileImage = async () => {
-  const user = await currentUser();
-  if (!user) return { message: "User Image not available!" };
+  try {
+    const user = await currentUser();
+    if (!user) return null;
 
-  const profile = await db.profile.findUnique({
-    where: {
-      clerkId: user.id,
-    },
-    select: {
-      profileImage: true,
-    },
-  });
-
-  return profile?.profileImage;
+    const profile = await db.profile.findUnique({
+      where: {
+        clerkId: user.id,
+      },
+      select: {
+        profileImage: true,
+      },
+    });
+    return profile?.profileImage;
+  } catch (error) {
+    return renderError(error);
+  }
 };
 
 export const fetchProfile = async () => {
@@ -87,7 +90,7 @@ export const updateProfileAction = async (
 
   try {
     const rawData = Object.fromEntries(formData);
-    const validatedFields = profileSchema.parse(rawData);
+    const validatedFields = validateWithZodSchema(profileSchema, rawData);
 
     await db.profile.update({
       where: {
