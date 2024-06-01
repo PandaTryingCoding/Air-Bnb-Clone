@@ -1,10 +1,12 @@
 "use server";
 
-import { profileSchema, validateWithZodSchema } from "./schemas";
+import { imageSchema, profileSchema, validateWithZodSchema } from "./schemas";
 import db from "./db";
 import { clerkClient, currentUser, auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+type ProfileImageResult = string | { message: string } | undefined | null;
 
 const renderError = (error: unknown): { message: string } => {
   console.log(error);
@@ -14,12 +16,19 @@ const renderError = (error: unknown): { message: string } => {
 };
 
 export const getAuthUser = async () => {
-  const user = await currentUser();
-  if (!user) {
-    throw new Error("You must be logged in to access this route!");
+  try {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("You must be logged in to access this route!");
+    }
+    if (!user.privateMetadata.hasProfile) {
+      redirect("/profile/create");
+    }
+    return user;
+  } catch (error) {
+    console.error("Error in getAuthUser:", error);
+    throw error; // Re-throw the error after logging it
   }
-  if (!user.privateMetadata.hasProfile) redirect("/profile/create");
-  return user;
 };
 
 export const createProfileAction = async (
@@ -52,7 +61,7 @@ export const createProfileAction = async (
   redirect("/");
 };
 
-export const fetchProfileImage = async () => {
+export const fetchProfileImage = async (): Promise<ProfileImageResult> => {
   try {
     const user = await currentUser();
     if (!user) return null;
@@ -103,4 +112,14 @@ export const updateProfileAction = async (
   } catch (error) {
     return renderError(error);
   }
+};
+
+export const updateProfileImageAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  const image = formData.get("image") as File;
+  const validatedFields = validateWithZodSchema(imageSchema, { image });
+
+  return { message: "Profile Image Updated Successfully!" };
 };
