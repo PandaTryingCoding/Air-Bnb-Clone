@@ -5,10 +5,11 @@ import Image from "next/image";
 import { headers } from "next/headers";
 
 async function UserIcon() {
-  const profileImage = await fetchProfileImage();
+  const profileImage: string | { message: string } | null | undefined =
+    await fetchProfileImage();
   if (!profileImage)
     return <LuUser2 className='w-6 h-6 bg-primary rounded-full text-white' />;
-  if (profileImage) {
+  if (typeof profileImage === "string") {
     return (
       <Image
         src={profileImage}
@@ -19,6 +20,8 @@ async function UserIcon() {
       />
     );
   }
+
+  return <LuUser2 className='w-6 h-6 bg-primary rounded-full text-white' />;
 }
 
 export default UserIcon;
