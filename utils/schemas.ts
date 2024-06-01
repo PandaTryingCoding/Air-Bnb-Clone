@@ -27,7 +27,7 @@ export function validateWithZodSchema<T>(
 }
 
 export const imageSchema = z.object({
-  image: validateFile().optional(),
+  image: validateFile(),
 });
 
 function validateFile() {
