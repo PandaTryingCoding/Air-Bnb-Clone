@@ -28,7 +28,7 @@ function CreatePropertyPage() {
               defaultValue='Wooden Shack'
             />
             <FormInput
-              name='tagine'
+              name='tagline'
               type='text'
               label='Tagline (30 limit)'
               defaultValue='Your dream getaway awaits you...'
