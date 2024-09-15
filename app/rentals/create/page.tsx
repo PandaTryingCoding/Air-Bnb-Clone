@@ -5,6 +5,11 @@ import { createPropertyAction } from "@/utils/actions";
 import SubmitButton from "@/components/form/Buttons";
 import PriceInput from "@/components/form/PriceInput";
 import CategoriesInput from "@/components/form/CategoriesInput";
+import TextAreaInput from "@/components/form/TextAreaInput";
+import CountriesInput from "@/components/form/CountriesInput";
+import ImageInput from "@/components/form/ImageInput";
+import CounterInput from "@/components/form/CounterInput";
+import AmenitiesInput from "@/components/form/AmenitiesInput";
 
 function CreatePropertyPage() {
   return (
@@ -23,7 +28,7 @@ function CreatePropertyPage() {
               defaultValue='Wooden Shack'
             />
             <FormInput
-              name='tagine'
+              name='tagline'
               type='text'
               label='Tagline (30 limit)'
               defaultValue='Your dream getaway awaits you...'
@@ -34,6 +39,21 @@ function CreatePropertyPage() {
             <CategoriesInput />
           </div>
           {/* text area/ description input */}
+          <TextAreaInput
+            name='description'
+            labelText='Description (10-1000 words)'
+          />
+          <div className='grid sm:grid-cols-2 gap-8 mt-4'>
+            <CountriesInput />
+            <ImageInput />
+          </div>
+          <h3 className='text-l mt-8 mb-4 font-medium'>Accomodation Details</h3>
+          <CounterInput detail='guests' />
+          <CounterInput detail='bedrooms' />
+          <CounterInput detail='beds' />
+          <CounterInput detail='baths' />
+          <h3 className='text-lg mt-10 mb-6 font-medium'>Amenities</h3>
+          <AmenitiesInput />
           <SubmitButton text='Create Rental' className='mt-12' />
         </FormContainer>
       </div>
