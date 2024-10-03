@@ -1,3 +1,4 @@
+import { comment } from "postcss";
 import * as z from "zod";
 import { ZodSchema } from "zod";
 
@@ -86,7 +87,13 @@ export const propertySchema = z.object({
     message: "beds amount must be a positive number.",
   }),
   baths: z.coerce.number().int().min(0, {
-    message: "bahts amount must be a positive number.",
+    message: "baths amount must be a positive number.",
   }),
   amenities: z.string(),
+});
+
+export const createReviewSchema = z.object({
+  propertyId: z.string(),
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z.string().min(10).max(500),
 });

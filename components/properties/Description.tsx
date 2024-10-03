@@ -5,7 +5,7 @@ import Title from "./Title";
 const Description = ({ description }: { description: string }) => {
   const [isFullDescriptionShown, setIsFullDescriptionShown] = useState(false);
   const words = description.split(" ");
-  const isLongDescription = words.length > 100;
+  const isLongDescription = words.length > 40;
 
   const toggleDescription = () => {
     setIsFullDescriptionShown(!isFullDescriptionShown);
@@ -13,7 +13,7 @@ const Description = ({ description }: { description: string }) => {
 
   const displayedDescription =
     isLongDescription && !isFullDescriptionShown
-      ? words.slice(0, 100).join(" ") + "..."
+      ? words.slice(0, 40).join(" ") + "..."
       : description;
 
   return (
