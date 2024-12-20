@@ -2,6 +2,8 @@ import { findCountryByCode } from "@/utils/countries";
 import React from "react";
 import Flag from "react-world-flags";
 
+// adding a dummy comment here for testing accounts
+
 function CountryFlagAndName({ countryCode }: { countryCode: string }) {
   const validCountry = findCountryByCode(countryCode)!;
   const countryName =
