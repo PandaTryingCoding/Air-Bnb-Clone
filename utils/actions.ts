@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { uploadImage } from "./supabase";
 import Rating from "@/components/reviews/Rating";
+import { calculateTotals } from "./calculateTotals";
 
 type ProfileImageResult = string | { message: string } | undefined | null;
 
@@ -100,7 +101,7 @@ export const fetchProfile = async () => {
 };
 
 export const updateProfileAction = async (
-  prevSatate: any,
+  prevState: any,
   formData: FormData
 ): Promise<{ message: string }> => {
   const user = await getAuthUser();
@@ -222,13 +223,13 @@ export const fetchFavouriteId = async ({
   return favourite?.id || null;
 };
 
-export const toggleFavouriteAction = async (prevSatate: {
+export const toggleFavouriteAction = async (prevState: {
   propertyId: string;
   favoriteId: string | null;
   pathname: string;
 }) => {
   const user = await getAuthUser();
-  const { propertyId, favoriteId, pathname } = prevSatate;
+  const { propertyId, favoriteId, pathname } = prevState;
   console.log(propertyId, favoriteId, pathname);
   try {
     if (favoriteId) {
@@ -294,7 +295,7 @@ export const fetchPropertyDetails = (id: string) => {
 };
 
 export const createReviewAction = async (
-  prevSatate: any,
+  prevState: any,
   formData: FormData
 ) => {
   const user = await getAuthUser();
@@ -404,4 +405,40 @@ export const findExistingReview = async (
       propertyId: propertyId,
     },
   });
+};
+
+export const createBookingAction = async (prevState: {
+  propertyId: string;
+  checkIn: Date;
+  checkOut: Date;
+}) => {
+  const user = await getAuthUser();
+  const { propertyId, checkIn, checkOut } = prevState;
+  const property = await db.property.findUnique({
+    where: { id: propertyId },
+    select: { price: true },
+  });
+  if (!property) {
+    return { message: "Property Not Found" };
+  }
+  const { orderTotal, totalNights } = calculateTotals({
+    checkIn,
+    checkOut,
+    price: property.price,
+  });
+  try {
+    const booking = await db.booking.create({
+      data: {
+        checkIn,
+        checkOut,
+        orderTotal,
+        totalNights,
+        profileId: user.id,
+        propertyId,
+      },
+    });
+  } catch (error) {
+    return renderError(error);
+  }
+  redirect("/bookings");
 };
