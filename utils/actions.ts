@@ -18,7 +18,6 @@ import { calculateTotals } from "./calculateTotals";
 type ProfileImageResult = string | { message: string } | undefined | null;
 
 const renderError = (error: unknown): { message: string } => {
-  console.log(error);
   return {
     message: error instanceof Error ? error.message : "There was an error!",
   };
@@ -156,7 +155,6 @@ export const createPropertyAction = async (
   try {
     const rawData = Object.fromEntries(formData);
     const file = formData.get("image") as File;
-    console.log(rawData);
 
     const validatedFields = validateWithZodSchema(propertySchema, rawData);
     const validatedFile = validateWithZodSchema(imageSchema, { image: file });
@@ -230,7 +228,6 @@ export const toggleFavouriteAction = async (prevState: {
 }) => {
   const user = await getAuthUser();
   const { propertyId, favoriteId, pathname } = prevState;
-  console.log(propertyId, favoriteId, pathname);
   try {
     if (favoriteId) {
       await db.favorite.delete({
