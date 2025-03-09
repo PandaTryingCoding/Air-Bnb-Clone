@@ -36,6 +36,7 @@
     "react-leaflet": "^4.2.1",
     "react-share": "^5.1.0",
     "react-world-flags": "^1.6.0",
+    "recharts": "^2.15.1",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
     "use-debounce": "^10.0.3",

@@ -14,6 +14,7 @@ import { redirect } from "next/navigation";
 import { uploadImage } from "./supabase";
 import Rating from "@/components/reviews/Rating";
 import { calculateTotals } from "./calculateTotals";
+import { formatDate } from "./format";
 
 type ProfileImageResult = string | { message: string } | undefined | null;
 
@@ -37,6 +38,12 @@ export const getAuthUser = async () => {
     console.error("Error in getAuthUser:", error);
     throw error; // Re-throw the error after logging it
   }
+};
+
+const getAdminUser = async () => {
+  const user = await getAuthUser();
+  if (user.id !== process.env.ADMIN_USER_ID) redirect("/");
+  return user;
 };
 
 export const createProfileAction = async (
@@ -597,4 +604,69 @@ export const updatePropertyImageAction = async (
   } catch (error) {
     return renderError(error);
   }
+};
+
+export const fetchReservations = async () => {
+  const user = await getAuthUser();
+
+  const reservations = await db.booking.findMany({
+    where: {
+      property: {
+        profileId: user.id,
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      property: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          country: true,
+        },
+      },
+    },
+  });
+  return reservations;
+};
+
+export const fetchStats = async () => {
+  await getAdminUser();
+
+  const userCount = await db.profile.count();
+  const propertiesCount = await db.property.count();
+  const bookingsCount = await db.booking.count();
+
+  return { userCount, propertiesCount, bookingsCount };
+};
+
+export const fetchChartsData = async () => {
+  await getAdminUser();
+  const date = new Date();
+  date.setMonth(date.getMonth() - 12);
+  const twelveMonthsAgo = date;
+
+  const bookings = await db.booking.findMany({
+    where: {
+      createdAt: {
+        gte: twelveMonthsAgo,
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+  const bookingsPerMonth = bookings.reduce((total, current) => {
+    const date = formatDate(current.createdAt, true);
+    const existingEntry = total.find((entry) => entry.date === date);
+    if (existingEntry) {
+      existingEntry.count += 1;
+    } else {
+      total.push({ date, count: 1 });
+    }
+    return total;
+  }, [] as Array<{ date: string; count: number }>);
+  return bookingsPerMonth;
 };

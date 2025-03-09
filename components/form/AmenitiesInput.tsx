@@ -5,7 +5,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FiCloud } from "react-icons/fi";
 
 function AmenitiesInput({ defaultValue }: { defaultValue?: Amenity[] }) {
-  console.log(defaultValue, "HERE IS THE VALUE");
   const amenitiesWithIcons = defaultValue?.map(({ name, selected }) => {
     return {
       name,

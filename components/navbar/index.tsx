@@ -6,11 +6,17 @@ import Logo from "./Logo";
 
 function Navbar() {
   return (
-    <nav className='border-b'>
+    <nav className='fixed top-0 left-0 w-full bg-white border-b z-50 shadow-md'>
       <div className='container flex flex-col sm:flex-row sm:justify-between sm:items-center flex-wrap gap-4 py-6'>
-        <Logo />
+        <div className='flex items-center justify-between'>
+          <Logo />
+          <div className='sm:hidden gap-4 items-center flex'>
+            <DarkMode />
+            <LinksDropdown />
+          </div>
+        </div>
         <NavSearch />
-        <div className='flex gap-4 items-center'>
+        <div className='sm:flex gap-4 items-center hidden'>
           <DarkMode />
           <LinksDropdown />
         </div>
