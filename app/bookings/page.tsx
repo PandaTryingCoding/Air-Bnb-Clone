@@ -22,7 +22,7 @@ async function BookingsPage() {
   if (bookings.length === 0) return <EmptyList />;
 
   return (
-    <div className='mt-16'>
+    <div className='mt-8'>
       <h4 className='mb-4 capitalize'>Total Bookings : {bookings.length}</h4>
       <Table>
         <TableCaption>A list of your recent bookings</TableCaption>

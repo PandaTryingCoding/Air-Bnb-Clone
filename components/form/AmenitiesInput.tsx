@@ -1,13 +1,22 @@
 "use client";
 import { useState } from "react";
-import { conservativeAmenities, Amenity } from "@/utils/amenities";
+import { amenities, Amenity, conservativeAmenities } from "@/utils/amenities";
 import { Checkbox } from "@/components/ui/checkbox";
-
-import React from "react";
+import { FiCloud } from "react-icons/fi";
 
 function AmenitiesInput({ defaultValue }: { defaultValue?: Amenity[] }) {
+  console.log(defaultValue, "HERE IS THE VALUE");
+  const amenitiesWithIcons = defaultValue?.map(({ name, selected }) => {
+    return {
+      name,
+      icon:
+        conservativeAmenities?.find((amenity) => amenity?.name === name)
+          ?.icon ?? FiCloud,
+      selected,
+    };
+  });
   const [selectedAmenities, setSelectedAmenities] = useState<Amenity[]>(
-    defaultValue || conservativeAmenities
+    amenitiesWithIcons || conservativeAmenities
   );
   const handleChange = (amenity: Amenity) => {
     setSelectedAmenities((prev) => {
@@ -19,6 +28,7 @@ function AmenitiesInput({ defaultValue }: { defaultValue?: Amenity[] }) {
       });
     });
   };
+
   return (
     <section>
       <input
@@ -34,14 +44,12 @@ function AmenitiesInput({ defaultValue }: { defaultValue?: Amenity[] }) {
                 id={amenity.name}
                 checked={amenity.selected}
                 onCheckedChange={() => handleChange(amenity)}
-                className='rounded-[5px]'
               />
               <label
                 htmlFor={amenity.name}
-                className='text-sm font-medium leading-snug capitalize flex gap-x-2 items-center'
+                className='text-sm font-medium leading-none capitalize flex gap-x-2 items-center'
               >
-                {amenity.name}
-                <amenity.icon className='w-4 h-4' />
+                {amenity.name} <amenity.icon className='w-4 h-4' />
               </label>
             </div>
           );
@@ -50,5 +58,4 @@ function AmenitiesInput({ defaultValue }: { defaultValue?: Amenity[] }) {
     </section>
   );
 }
-
 export default AmenitiesInput;
