@@ -6,7 +6,7 @@ import Logo from "./Logo";
 
 function Navbar() {
   return (
-    <nav className='fixed top-0 left-0 w-full bg-white border-b z-50 shadow-md'>
+    <nav className='fixed top-0 left-0 w-full bg-background/80 backdrop-blur-md border-b z-50 shadow-md'>
       <div className='container flex flex-col sm:flex-row sm:justify-between sm:items-center flex-wrap gap-4 py-6'>
         <div className='flex items-center justify-between'>
           <Logo />
