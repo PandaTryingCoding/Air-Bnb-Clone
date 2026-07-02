@@ -7,7 +7,7 @@ import PriceInput from "@/components/form/PriceInput";
 import CategoriesInput from "@/components/form/CategoriesInput";
 import TextAreaInput from "@/components/form/TextAreaInput";
 import CountriesInput from "@/components/form/CountriesInput";
-import ImageInput from "@/components/form/ImageInput";
+import PropertyImagesInput from "@/components/form/PropertyImagesInput";
 import CounterInput from "@/components/form/CounterInput";
 import AmenitiesInput from "@/components/form/AmenitiesInput";
 
@@ -45,7 +45,7 @@ function CreatePropertyPage() {
           />
           <div className='grid sm:grid-cols-2 gap-8 mt-4'>
             <CountriesInput />
-            <ImageInput />
+            <PropertyImagesInput />
           </div>
           <h3 className='text-l mt-8 mb-4 font-medium'>Accomodation Details</h3>
           <CounterInput detail='guests' />

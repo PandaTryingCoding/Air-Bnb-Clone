@@ -4,6 +4,7 @@ import {
   createReviewSchema,
   imageSchema,
   profileSchema,
+  propertyImagesSchema,
   propertySchema,
   validateWithZodSchema,
 } from "./schemas";
@@ -170,17 +171,27 @@ export const createPropertyAction = async (
   const user = await getAuthUser();
   try {
     const rawData = Object.fromEntries(formData);
-    const file = formData.get("image") as File;
+    const files = (formData.getAll("images") as File[]).filter(
+      (file) => file.size > 0
+    );
 
     const validatedFields = validateWithZodSchema(propertySchema, rawData);
-    const validatedFile = validateWithZodSchema(imageSchema, { image: file });
-    const fullPath = await uploadImage(validatedFile.image);
+    const validatedFiles = validateWithZodSchema(propertyImagesSchema, {
+      images: files,
+    });
+
+    const uploadedUrls = await Promise.all(
+      validatedFiles.images.map((image) => uploadImage(image))
+    );
 
     await db.property.create({
       data: {
         ...validatedFields,
-        image: fullPath,
+        image: uploadedUrls[0],
         profileId: user.id,
+        images: {
+          create: uploadedUrls.map((url, order) => ({ url, order })),
+        },
       },
     });
   } catch (error) {
