@@ -13,13 +13,13 @@ import UserIcon from "./UserIcon";
 import { links } from "@/utils/links";
 import SignoutLink from "./SignoutLink";
 import { SignedOut, SignedIn, SignInButton, SignUpButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 
 import { LuUser2 } from "react-icons/lu";
 
 async function LinksDropdown() {
-  const { userId } = auth();
-  const isUserAdmin = userId === process.env.ADMIN_USER_ID;
+  const user = await currentUser();
+  const isUserAdmin = user?.id === process.env.ADMIN_USER_ID;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

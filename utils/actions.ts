@@ -29,9 +29,20 @@ export const getAuthUser = async () => {
   if (!user) {
     redirect("/");
   }
-  if (!user.privateMetadata.hasProfile) {
+
+  const profile = await db.profile.findUnique({
+    where: {
+      clerkId: user.id,
+    },
+    select: {
+      clerkId: true,
+    },
+  });
+
+  if (!profile) {
     redirect("/profile/create");
   }
+
   return user;
 };
 
@@ -60,11 +71,14 @@ export const createProfileAction = async (
         ...validatedFields,
       },
     });
-    await clerkClient.users.updateUserMetadata(user.id, {
-      privateMetadata: {
-        hasProfile: true,
-      },
-    });
+
+    if (!user.privateMetadata.hasProfile) {
+      await clerkClient.users.updateUserMetadata(user.id, {
+        privateMetadata: {
+          hasProfile: true,
+        },
+      });
+    }
   } catch (error) {
     return renderError(error);
   }

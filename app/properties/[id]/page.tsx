@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchPropertyDetails, findExistingReview } from "@/utils/actions";
 import nextDynamic from "next/dynamic";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import React from "react";
 import { log } from "node:console";
 
@@ -44,7 +44,8 @@ async function PropertyDetailsPage({ params }: { params: { id: string } }) {
   const firstName = property.profile.firstName;
   const profileImage = property.profile.profileImage;
 
-  const { userId } = auth();
+  const user = await currentUser();
+  const userId = user?.id;
   const isNotOwner = property.profile.clerkId !== userId;
   const reviewDoesNotExist =
     userId && isNotOwner && !(await findExistingReview(userId, property.id));
