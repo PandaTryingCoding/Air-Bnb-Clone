@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import FavouriteToggleButton from "@/components/card/FavouriteToggleButton";
 import PropertyRating from "@/components/card/PropertyRating";
 import Amenities from "@/components/properties/Amenities";
@@ -12,13 +14,13 @@ import SubmitReview from "@/components/reviews/SubmitReview";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchPropertyDetails, findExistingReview } from "@/utils/actions";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import React from "react";
 import { log } from "node:console";
 
-const DynamicMap = dynamic(
+const DynamicMap = nextDynamic(
   () => import("@/components/properties/PropertyMap"),
   {
     ssr: false,
@@ -26,7 +28,7 @@ const DynamicMap = dynamic(
   }
 );
 
-const DynamicBookingWrapper = dynamic(
+const DynamicBookingWrapper = nextDynamic(
   () => import("@/components/booking/BookingWrapper"),
   {
     ssr: false,

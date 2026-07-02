@@ -25,19 +25,14 @@ const renderError = (error: unknown): { message: string } => {
 };
 
 export const getAuthUser = async () => {
-  try {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("You must be logged in to access this route!");
-    }
-    if (!user.privateMetadata.hasProfile) {
-      redirect("/profile/create");
-    }
-    return user;
-  } catch (error) {
-    console.error("Error in getAuthUser:", error);
-    throw error; // Re-throw the error after logging it
+  const user = await currentUser();
+  if (!user) {
+    redirect("/");
   }
+  if (!user.privateMetadata.hasProfile) {
+    redirect("/profile/create");
+  }
+  return user;
 };
 
 const getAdminUser = async () => {

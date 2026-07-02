@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { fetchReservations } from "@/utils/actions";
 import Link from "next/link";
 import EmptyList from "@/components/home/EmptyList";

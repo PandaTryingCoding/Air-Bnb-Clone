@@ -2,7 +2,6 @@ import React from "react";
 import { LuUser2 } from "react-icons/lu";
 import { fetchProfileImage } from "@/utils/actions";
 import Image from "next/image";
-import { headers } from "next/headers";
 
 async function UserIcon() {
   const profileImage: string | { message: string } | null | undefined =

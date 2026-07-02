@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import EmptyList from "@/components/home/EmptyList";
 import PropertiesList from "@/components/home/PropertiesList";
 import { fetchFavorites } from "@/utils/actions";
