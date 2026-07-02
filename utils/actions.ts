@@ -222,12 +222,30 @@ export const fetchProperties = async ({
       tagline: true,
       country: true,
       price: true,
+      images: {
+        select: {
+          url: true,
+        },
+        orderBy: {
+          order: "asc",
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
     },
   });
-  return properties;
+  return properties.map((property) => ({
+    id: property.id,
+    name: property.name,
+    tagline: property.tagline,
+    country: property.country,
+    price: property.price,
+    images:
+      property.images.length > 0
+        ? property.images.map((image) => image.url)
+        : [property.image],
+  }));
 };
 
 export const fetchFavouriteId = async ({
@@ -294,11 +312,29 @@ export const fetchFavorites = async () => {
           country: true,
           price: true,
           image: true,
+          images: {
+            select: {
+              url: true,
+            },
+            orderBy: {
+              order: "asc",
+            },
+          },
         },
       },
     },
   });
-  return favorites.map((favorite) => favorite.property);
+  return favorites.map((favorite) => ({
+    id: favorite.property.id,
+    name: favorite.property.name,
+    tagline: favorite.property.tagline,
+    country: favorite.property.country,
+    price: favorite.property.price,
+    images:
+      favorite.property.images.length > 0
+        ? favorite.property.images.map((image) => image.url)
+        : [favorite.property.image],
+  }));
 };
 
 export const fetchPropertyDetails = (id: string) => {

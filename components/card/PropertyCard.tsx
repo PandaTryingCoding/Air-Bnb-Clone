@@ -1,27 +1,28 @@
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import CountryFlagAndName from "./CountryFlagAndName";
 import PropertyRating from "./PropertyRating";
 import FavouriteToggleButton from "./FavouriteToggleButton";
+import PropertyCardCarousel from "./PropertyCardCarousel";
 import { PropertyCardProps } from "@/utils/types";
 import { formatCurrency } from "@/utils/format";
 
 function PropertyCard({ property }: { property: PropertyCardProps }) {
-  const { name, image, price } = property;
+  const { name, images, price } = property;
   const { country, id: propertyId, tagline } = property;
   return (
     <article className='group relative'>
-      <Link href={`/properties/${propertyId}`}>
-        <div className='relative h-[300px] mb-2 overflow-hidden rounded-md'>
-          <Image
-            src={image}
-            fill
-            sizes='(max-width:768px) 100vw, 50vw'
-            alt={name}
-            className='!rounded-md !object-cover !transform group-hover:scale-110 !transition-transform !duration-500'
-          />
+      <div className='relative mb-2'>
+        <PropertyCardCarousel
+          images={images}
+          name={name}
+          propertyId={propertyId}
+        />
+        <div className='absolute top-5 right-5 z-10'>
+          <FavouriteToggleButton propertyId={propertyId} />
         </div>
+      </div>
+      <Link href={`/properties/${propertyId}`}>
         <div className='flex items-center justify-between'>
           <h3 className='text-sm font-semibold mt-1'>
             {name.substring(0, 30)}
@@ -41,10 +42,6 @@ function PropertyCard({ property }: { property: PropertyCardProps }) {
           <CountryFlagAndName countryCode={country} />
         </div>
       </Link>
-      <div className='absolute top-5 right-5 z-5'>
-        {/* favourite toggle button */}
-        <FavouriteToggleButton propertyId={propertyId} />
-      </div>
     </article>
   );
 }
