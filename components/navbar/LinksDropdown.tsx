@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +15,9 @@ import SignoutLink from "./SignoutLink";
 import { SignedOut, SignedIn, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 
-function LinksDropdown() {
+import { LuUser2 } from "react-icons/lu";
+
+async function LinksDropdown() {
   const { userId } = auth();
   const isUserAdmin = userId === process.env.ADMIN_USER_ID;
   return (
@@ -23,7 +25,13 @@ function LinksDropdown() {
       <DropdownMenuTrigger asChild>
         <Button variant={"outline"} className='flex gap-4 max-w-[100px]'>
           <LuAlignLeft className='w-6 h-6' />
-          <UserIcon />
+          <Suspense
+            fallback={
+              <LuUser2 className='w-6 h-6 bg-primary rounded-full text-white' />
+            }
+          >
+            <UserIcon />
+          </Suspense>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className='w-52' align='start' sideOffset={10}>

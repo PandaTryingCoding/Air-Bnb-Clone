@@ -1,21 +1,31 @@
 import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-const prismaClientSingleton = () => {
-  const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL!,
-  });
-  return new PrismaClient({ adapter });
-};
+const connectionString = process.env.DATABASE_URL;
 
-type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
+if (!connectionString) {
+  throw new Error(
+    "DATABASE_URL is not set. Add your Supabase pooled connection string to Vercel environment variables."
+  );
+}
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClientSingleton | undefined;
+  prisma: PrismaClient | undefined;
+  pool: Pool | undefined;
 };
 
-const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
+const pool =
+  globalForPrisma.pool ??
+  new Pool({
+    connectionString,
+    max: 1,
+  });
+
+const adapter = new PrismaPg(pool);
+const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
+
+globalForPrisma.pool = pool;
+globalForPrisma.prisma = prisma;
 
 export default prisma;
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
