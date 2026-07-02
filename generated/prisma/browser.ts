@@ -28,6 +28,11 @@ export type Profile = Prisma.ProfileModel
  */
 export type Property = Prisma.PropertyModel
 /**
+ * Model PropertyImage
+ * 
+ */
+export type PropertyImage = Prisma.PropertyImageModel
+/**
  * Model Favorite
  * 
  */
