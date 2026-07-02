@@ -337,8 +337,8 @@ export const fetchFavorites = async () => {
   }));
 };
 
-export const fetchPropertyDetails = (id: string) => {
-  return db.property.findUnique({
+export const fetchPropertyDetails = async (id: string) => {
+  const property = await db.property.findUnique({
     where: {
       id,
     },
@@ -350,8 +350,26 @@ export const fetchPropertyDetails = (id: string) => {
           checkOut: true,
         },
       },
+      images: {
+        select: {
+          url: true,
+        },
+        orderBy: {
+          order: "asc",
+        },
+      },
     },
   });
+
+  if (!property) return null;
+
+  return {
+    ...property,
+    images:
+      property.images.length > 0
+        ? property.images.map((image) => image.url)
+        : [property.image],
+  };
 };
 
 export const createReviewAction = async (

@@ -25,7 +25,7 @@ const DynamicMap = nextDynamic(
   {
     ssr: false,
     loading: () => <Skeleton className='h-[300px] w-full' />,
-  }
+  },
 );
 
 const DynamicBookingWrapper = nextDynamic(
@@ -33,7 +33,7 @@ const DynamicBookingWrapper = nextDynamic(
   {
     ssr: false,
     loading: () => <Skeleton className='h-[200px] w-full' />,
-  }
+  },
 );
 
 async function PropertyDetailsPage({ params }: { params: { id: string } }) {
@@ -54,13 +54,15 @@ async function PropertyDetailsPage({ params }: { params: { id: string } }) {
     <section>
       <BreadCrumbs name={property.name} />
       <header className='flex justify-between items-center mt-4'>
-        <h1 className='text-4xl font-bold capitalize'>{property.tagline}</h1>
+        <h1 className='text-xl md:text-2xl lg:text-4xl font-bold capitalize'>
+          {property.tagline}
+        </h1>
         <div className='flex items-center gap-4'>
           <ShareButton name={property.name} propertyId={property.id} />
           <FavouriteToggleButton propertyId={property.id} />
         </div>
       </header>
-      <ImageContainer mainImage={property.image} name={property.name} />
+      <ImageContainer images={property.images} name={property.name} />
       <section className='lg:grid lg:grid-cols-12 !gap-x-8 mt-12'>
         <div className='lg:col-span-8'>
           <div className='flex gap-4 items-center'>
