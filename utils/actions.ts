@@ -12,7 +12,8 @@ import db from "./db";
 import { clerkClient, currentUser, auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { uploadImage } from "./supabase";
+import { deleteImage, uploadImage } from "./supabase";
+import { MAX_PROPERTY_IMAGES } from "./schemas";
 import Rating from "@/components/reviews/Rating";
 import { calculateTotals } from "./calculateTotals";
 import { formatDate } from "./format";
@@ -621,12 +622,38 @@ export const deleteRentalAction = async (prevState: { propertyId: string }) => {
 
 export const fetchRentalDetails = async (propertyId: string) => {
   const user = await getAuthUser();
-  return db.property.findUnique({
+  const property = await db.property.findUnique({
     where: {
       id: propertyId,
       profileId: user.id,
     },
+    include: {
+      images: {
+        orderBy: {
+          order: "asc",
+        },
+      },
+    },
   });
+
+  if (!property) return null;
+
+  if (property.images.length === 0 && property.image) {
+    const backfilled = await db.propertyImage.create({
+      data: {
+        propertyId: property.id,
+        url: property.image,
+        order: 0,
+      },
+    });
+
+    return {
+      ...property,
+      images: [backfilled],
+    };
+  }
+
+  return property;
 };
 
 export const updatePropertyAction = async (
@@ -654,27 +681,158 @@ export const updatePropertyAction = async (
   }
 };
 
-export const updatePropertyImageAction = async (
+export const deletePropertyImageAction = async (
   prevState: any,
   formData: FormData
 ): Promise<{ message: string }> => {
   const user = await getAuthUser();
-  const propertyId = formData.get("id") as string;
+  const propertyId = formData.get("propertyId") as string;
+  const imageId = formData.get("imageId") as string;
+
   try {
-    const image = formData.get("image") as File;
-    const validatedFields = validateWithZodSchema(imageSchema, { image });
-    const fullPath = await uploadImage(validatedFields.image);
-    await db.property.update({
+    const property = await db.property.findUnique({
       where: {
         id: propertyId,
         profileId: user.id,
       },
-      data: {
-        image: fullPath,
+      include: {
+        images: {
+          orderBy: {
+            order: "asc",
+          },
+        },
       },
     });
+
+    if (!property) {
+      throw new Error("Property not found.");
+    }
+
+    if (property.images.length <= 1) {
+      throw new Error("At least one image is required.");
+    }
+
+    const image = property.images.find((item) => item.id === imageId);
+    if (!image) {
+      throw new Error("Image not found.");
+    }
+
+    await db.propertyImage.delete({
+      where: {
+        id: imageId,
+      },
+    });
+
+    const remaining = property.images.filter((item) => item.id !== imageId);
+
+    await db.$transaction(async (tx) => {
+      for (let i = 0; i < remaining.length; i++) {
+        await tx.propertyImage.update({
+          where: {
+            id: remaining[i].id,
+          },
+          data: {
+            order: i + 1000,
+          },
+        });
+      }
+
+      for (let i = 0; i < remaining.length; i++) {
+        await tx.propertyImage.update({
+          where: {
+            id: remaining[i].id,
+          },
+          data: {
+            order: i,
+          },
+        });
+      }
+    });
+
+    if (image.order === 0 || property.image === image.url) {
+      await db.property.update({
+        where: {
+          id: propertyId,
+        },
+        data: {
+          image: remaining[0].url,
+        },
+      });
+    }
+
+    await deleteImage(image.url);
     revalidatePath(`/rentals/${propertyId}/edit`);
-    return { message: "Property Image Updated!" };
+    revalidatePath(`/properties/${propertyId}`);
+    return { message: "Image deleted successfully!" };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+
+export const addPropertyImagesAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  const user = await getAuthUser();
+  const propertyId = formData.get("propertyId") as string;
+
+  try {
+    const property = await db.property.findUnique({
+      where: {
+        id: propertyId,
+        profileId: user.id,
+      },
+      include: {
+        _count: {
+          select: {
+            images: true,
+          },
+        },
+      },
+    });
+
+    if (!property) {
+      throw new Error("Property not found.");
+    }
+
+    const existingCount = property._count.images;
+    const remainingSlots = MAX_PROPERTY_IMAGES - existingCount;
+
+    if (remainingSlots <= 0) {
+      throw new Error(`You can upload up to ${MAX_PROPERTY_IMAGES} images.`);
+    }
+
+    const files = (formData.getAll("images") as File[]).filter(
+      (file) => file.size > 0
+    );
+
+    if (files.length === 0) {
+      throw new Error("Select at least one image.");
+    }
+
+    if (files.length > remainingSlots) {
+      throw new Error(`You can only add ${remainingSlots} more image(s).`);
+    }
+
+    const validatedFiles = validateWithZodSchema(propertyImagesSchema, {
+      images: files,
+    });
+
+    const uploadedUrls = await Promise.all(
+      validatedFiles.images.map((file) => uploadImage(file))
+    );
+
+    await db.propertyImage.createMany({
+      data: uploadedUrls.map((url, index) => ({
+        propertyId,
+        url,
+        order: existingCount + index,
+      })),
+    });
+
+    revalidatePath(`/rentals/${propertyId}/edit`);
+    revalidatePath(`/properties/${propertyId}`);
+    return { message: "Images added successfully!" };
   } catch (error) {
     return renderError(error);
   }
