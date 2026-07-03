@@ -30,11 +30,11 @@ model Profile {
 }
 
 model Property{
- id           String    @id @default(uuid())
+ id           String          @id @default(uuid())
  name         String
  tagline      String
  category     String
- image        String
+ image        String          // cover thumbnail for cards; mirrors images[0]
  country      String
  description  String
  price        Int
@@ -43,13 +43,26 @@ model Property{
  beds         Int
  baths        Int
  amenities    String
- createdAt    DateTime  @default(now())
- updatedAt    DateTime  @updatedAt
- profile      Profile   @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+ createdAt    DateTime        @default(now())
+ updatedAt    DateTime        @updatedAt
+ profile      Profile         @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
  profileId    String
+ images       PropertyImage[]
  favorites    Favorite[]
  reviews      Review[]
  bookings     Booking[]
+}
+
+model PropertyImage {
+ id         String   @id @default(uuid())
+ url        String
+ order      Int      // carousel position (0 = primary/cover)
+ createdAt  DateTime @default(now())
+ property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+ propertyId String
+
+ @@unique([propertyId, order])
+ @@index([propertyId, order])
 }
 
 model Favorite {

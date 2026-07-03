@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import ChartsContainer from "@/components/admin/ChartsContainer";
 import {
   ChartsLoadingContainer,

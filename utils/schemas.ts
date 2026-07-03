@@ -27,8 +27,19 @@ export function validateWithZodSchema<T>(
   return result.data;
 }
 
+export const MAX_PROPERTY_IMAGES = 6;
+
 export const imageSchema = z.object({
   image: validateFile(),
+});
+
+export const propertyImagesSchema = z.object({
+  images: z
+    .array(validateFile())
+    .min(1, { message: "At least one image is required." })
+    .max(MAX_PROPERTY_IMAGES, {
+      message: `You can upload up to ${MAX_PROPERTY_IMAGES} images.`,
+    }),
 });
 
 function validateFile() {

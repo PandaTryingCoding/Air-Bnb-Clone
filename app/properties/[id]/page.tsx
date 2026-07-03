@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import FavouriteToggleButton from "@/components/card/FavouriteToggleButton";
 import PropertyRating from "@/components/card/PropertyRating";
 import Amenities from "@/components/properties/Amenities";
@@ -12,26 +14,26 @@ import SubmitReview from "@/components/reviews/SubmitReview";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchPropertyDetails, findExistingReview } from "@/utils/actions";
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import React from "react";
 import { log } from "node:console";
 
-const DynamicMap = dynamic(
+const DynamicMap = nextDynamic(
   () => import("@/components/properties/PropertyMap"),
   {
     ssr: false,
     loading: () => <Skeleton className='h-[300px] w-full' />,
-  }
+  },
 );
 
-const DynamicBookingWrapper = dynamic(
+const DynamicBookingWrapper = nextDynamic(
   () => import("@/components/booking/BookingWrapper"),
   {
     ssr: false,
     loading: () => <Skeleton className='h-[200px] w-full' />,
-  }
+  },
 );
 
 async function PropertyDetailsPage({ params }: { params: { id: string } }) {
@@ -42,7 +44,8 @@ async function PropertyDetailsPage({ params }: { params: { id: string } }) {
   const firstName = property.profile.firstName;
   const profileImage = property.profile.profileImage;
 
-  const { userId } = auth();
+  const user = await currentUser();
+  const userId = user?.id;
   const isNotOwner = property.profile.clerkId !== userId;
   const reviewDoesNotExist =
     userId && isNotOwner && !(await findExistingReview(userId, property.id));
@@ -51,13 +54,15 @@ async function PropertyDetailsPage({ params }: { params: { id: string } }) {
     <section>
       <BreadCrumbs name={property.name} />
       <header className='flex justify-between items-center mt-4'>
-        <h1 className='text-4xl font-bold capitalize'>{property.tagline}</h1>
+        <h1 className='text-xl md:text-2xl lg:text-4xl font-bold capitalize'>
+          {property.tagline}
+        </h1>
         <div className='flex items-center gap-4'>
           <ShareButton name={property.name} propertyId={property.id} />
           <FavouriteToggleButton propertyId={property.id} />
         </div>
       </header>
-      <ImageContainer mainImage={property.image} name={property.name} />
+      <ImageContainer images={property.images} name={property.name} />
       <section className='lg:grid lg:grid-cols-12 !gap-x-8 mt-12'>
         <div className='lg:col-span-8'>
           <div className='flex gap-4 items-center'>

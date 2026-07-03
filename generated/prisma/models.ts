@@ -10,6 +10,7 @@
  */
 export type * from './models/Profile'
 export type * from './models/Property'
+export type * from './models/PropertyImage'
 export type * from './models/Favorite'
 export type * from './models/Review'
 export type * from './models/Booking'

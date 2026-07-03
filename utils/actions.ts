@@ -4,6 +4,7 @@ import {
   createReviewSchema,
   imageSchema,
   profileSchema,
+  propertyImagesSchema,
   propertySchema,
   validateWithZodSchema,
 } from "./schemas";
@@ -25,19 +26,25 @@ const renderError = (error: unknown): { message: string } => {
 };
 
 export const getAuthUser = async () => {
-  try {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("You must be logged in to access this route!");
-    }
-    if (!user.privateMetadata.hasProfile) {
-      redirect("/profile/create");
-    }
-    return user;
-  } catch (error) {
-    console.error("Error in getAuthUser:", error);
-    throw error; // Re-throw the error after logging it
+  const user = await currentUser();
+  if (!user) {
+    redirect("/");
   }
+
+  const profile = await db.profile.findUnique({
+    where: {
+      clerkId: user.id,
+    },
+    select: {
+      clerkId: true,
+    },
+  });
+
+  if (!profile) {
+    redirect("/profile/create");
+  }
+
+  return user;
 };
 
 const getAdminUser = async () => {
@@ -65,11 +72,14 @@ export const createProfileAction = async (
         ...validatedFields,
       },
     });
-    await clerkClient.users.updateUserMetadata(user.id, {
-      privateMetadata: {
-        hasProfile: true,
-      },
-    });
+
+    if (!user.privateMetadata.hasProfile) {
+      await clerkClient.users.updateUserMetadata(user.id, {
+        privateMetadata: {
+          hasProfile: true,
+        },
+      });
+    }
   } catch (error) {
     return renderError(error);
   }
@@ -161,17 +171,27 @@ export const createPropertyAction = async (
   const user = await getAuthUser();
   try {
     const rawData = Object.fromEntries(formData);
-    const file = formData.get("image") as File;
+    const files = (formData.getAll("images") as File[]).filter(
+      (file) => file.size > 0
+    );
 
     const validatedFields = validateWithZodSchema(propertySchema, rawData);
-    const validatedFile = validateWithZodSchema(imageSchema, { image: file });
-    const fullPath = await uploadImage(validatedFile.image);
+    const validatedFiles = validateWithZodSchema(propertyImagesSchema, {
+      images: files,
+    });
+
+    const uploadedUrls = await Promise.all(
+      validatedFiles.images.map((image) => uploadImage(image))
+    );
 
     await db.property.create({
       data: {
         ...validatedFields,
-        image: fullPath,
+        image: uploadedUrls[0],
         profileId: user.id,
+        images: {
+          create: uploadedUrls.map((url, order) => ({ url, order })),
+        },
       },
     });
   } catch (error) {
@@ -202,12 +222,30 @@ export const fetchProperties = async ({
       tagline: true,
       country: true,
       price: true,
+      images: {
+        select: {
+          url: true,
+        },
+        orderBy: {
+          order: "asc",
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
     },
   });
-  return properties;
+  return properties.map((property) => ({
+    id: property.id,
+    name: property.name,
+    tagline: property.tagline,
+    country: property.country,
+    price: property.price,
+    images:
+      property.images.length > 0
+        ? property.images.map((image) => image.url)
+        : [property.image],
+  }));
 };
 
 export const fetchFavouriteId = async ({
@@ -274,15 +312,33 @@ export const fetchFavorites = async () => {
           country: true,
           price: true,
           image: true,
+          images: {
+            select: {
+              url: true,
+            },
+            orderBy: {
+              order: "asc",
+            },
+          },
         },
       },
     },
   });
-  return favorites.map((favorite) => favorite.property);
+  return favorites.map((favorite) => ({
+    id: favorite.property.id,
+    name: favorite.property.name,
+    tagline: favorite.property.tagline,
+    country: favorite.property.country,
+    price: favorite.property.price,
+    images:
+      favorite.property.images.length > 0
+        ? favorite.property.images.map((image) => image.url)
+        : [favorite.property.image],
+  }));
 };
 
-export const fetchPropertyDetails = (id: string) => {
-  return db.property.findUnique({
+export const fetchPropertyDetails = async (id: string) => {
+  const property = await db.property.findUnique({
     where: {
       id,
     },
@@ -294,8 +350,26 @@ export const fetchPropertyDetails = (id: string) => {
           checkOut: true,
         },
       },
+      images: {
+        select: {
+          url: true,
+        },
+        orderBy: {
+          order: "asc",
+        },
+      },
     },
   });
+
+  if (!property) return null;
+
+  return {
+    ...property,
+    images:
+      property.images.length > 0
+        ? property.images.map((image) => image.url)
+        : [property.image],
+  };
 };
 
 export const createReviewAction = async (
