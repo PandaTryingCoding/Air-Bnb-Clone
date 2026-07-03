@@ -4,8 +4,9 @@ import React from "react";
 
 import {
   fetchRentalDetails,
-  updatePropertyImageAction,
   updatePropertyAction,
+  deletePropertyImageAction,
+  addPropertyImagesAction,
 } from "@/utils/actions";
 import FormContainer from "@/components/form/FormContainer";
 import FormInput from "@/components/form/FormInput";
@@ -18,7 +19,7 @@ import AmenitiesInput from "@/components/form/AmenitiesInput";
 import SubmitButton, { CardSubmitButton } from "@/components/form/Buttons";
 import { redirect } from "next/navigation";
 import { type Amenity } from "@/utils/amenities";
-import ImageInputContainer from "@/components/form/ImageInputContainer";
+import PropertyImagesManager from "@/components/form/PropertyImagesManager";
 
 async function EditRentalPage({ params }: { params: { id: string } }) {
   const property = await fetchRentalDetails(params.id);
@@ -28,14 +29,13 @@ async function EditRentalPage({ params }: { params: { id: string } }) {
     <section>
       <h1 className='text-2xl font-semibold mb-8 capitalize'>Edit Property</h1>
       <div className='border p-8 rounded-md'>
-        <ImageInputContainer
+        <PropertyImagesManager
+          propertyId={property.id}
           name={property.name}
-          text='Update Image'
-          action={updatePropertyImageAction}
-          image={property.image}
-        >
-          <input type='hidden' name='id' value={property.id} />
-        </ImageInputContainer>
+          images={property.images}
+          deleteAction={deletePropertyImageAction}
+          addAction={addPropertyImagesAction}
+        />
         <FormContainer action={updatePropertyAction}>
           <input type='hidden' name='id' value={property.id} />
           <div className='grid md:grid-cols-2 gap-8 mb-4 mt-8'>

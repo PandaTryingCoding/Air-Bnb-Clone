@@ -15,14 +15,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-// import Stats from "@/components/reservations/Stats";
+import Stats from "@/components/reservations/Stats";
+
 async function ReservationsPage() {
   const reservations = await fetchReservations();
   if (reservations.length === 0) return <EmptyList />;
 
   return (
     <>
-      {/* <Stats /> */}
+      <Stats />
       <div className='mt-8'>
         <h4 className='mb-4 capitalize'>
           total reservations : {reservations.length}

@@ -65,3 +65,30 @@ export const uploadImage = async (image: File) => {
 
   return supabase.storage.from(bucket).getPublicUrl(newName).data.publicUrl;
 };
+
+export function getStoragePathFromUrl(publicUrl: string): string {
+  const marker = `/object/public/${bucket}/`;
+  const markerIndex = publicUrl.indexOf(marker);
+
+  if (markerIndex !== -1) {
+    return decodeURIComponent(publicUrl.slice(markerIndex + marker.length));
+  }
+
+  const bucketSegment = `/${bucket}/`;
+  const bucketIndex = publicUrl.indexOf(bucketSegment);
+
+  if (bucketIndex === -1) {
+    throw new Error("Invalid storage URL");
+  }
+
+  return decodeURIComponent(publicUrl.slice(bucketIndex + bucketSegment.length));
+}
+
+export const deleteImage = async (publicUrl: string) => {
+  const path = getStoragePathFromUrl(publicUrl);
+  const { error } = await supabase.storage.from(bucket).remove([path]);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+};

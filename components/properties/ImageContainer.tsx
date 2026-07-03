@@ -4,6 +4,8 @@ import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import { BsGrid3X3Gap } from "react-icons/bs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { pickLayout } from "./bentoLayouts";
 
 type ImageContainerProps = {
@@ -19,6 +21,11 @@ function ImageContainer({ images, name }: ImageContainerProps) {
   const hasMorePhotos = images.length > 5;
   const extraPhotoCount = images.length - 5;
   const lastSlotIndex = layout.slots.length - 1;
+
+  const showAllPhotosButtonClass = cn(
+    buttonVariants({ variant: "outline", size: "sm" }),
+    "gap-2 font-semibold shadow-md backdrop-blur-sm bg-background/95"
+  );
 
   const markImageLoaded = (imageIndex: number) => {
     setLoadedImages((prev) => {
@@ -105,14 +112,15 @@ function ImageContainer({ images, name }: ImageContainerProps) {
           })}
         </div>
 
-        <button
+        <Button
           type='button'
+          variant='outline'
           onClick={() => setShowGallery(true)}
-          className='absolute bottom-4 right-4 flex items-center gap-2 rounded-lg border border-border bg-white px-4 py-2 text-sm font-semibold shadow-md transition-colors hover:bg-secondary'
+          className='absolute bottom-4 right-4 gap-2 font-semibold shadow-md backdrop-blur-sm bg-background/95'
         >
           <BsGrid3X3Gap className='h-4 w-4' />
           Show all photos
-        </button>
+        </Button>
       </section>
 
       {/* Mobile — cover only */}
@@ -136,7 +144,12 @@ function ImageContainer({ images, name }: ImageContainerProps) {
             priority
             onLoad={() => markImageLoaded(0)}
           />
-          <div className='absolute bottom-4 right-4 flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs font-semibold shadow-md'>
+          <div
+            className={cn(
+              showAllPhotosButtonClass,
+              "absolute bottom-4 right-4 pointer-events-none"
+            )}
+          >
             <BsGrid3X3Gap className='h-4 w-4' />
             Show all photos
           </div>
