@@ -1,4 +1,4 @@
-# HomeAway — Airbnb Clone
+# Airbnb Clone
 
 A full-stack short-term rental marketplace inspired by Airbnb. Users can discover properties, book stays, pay securely, manage listings, and leave reviews — all in one application.
 
@@ -8,7 +8,7 @@ Built as a production-style learning project with real integrations for authenti
 
 ## Executive Summary
 
-**HomeAway** connects two sides of a rental marketplace:
+**This App** connects two sides of a rental marketplace:
 
 - **Guests** browse listings, save favourites, book dates, pay online, and review stays.
 - **Hosts** create and manage property listings, track reservations, and view earnings.
