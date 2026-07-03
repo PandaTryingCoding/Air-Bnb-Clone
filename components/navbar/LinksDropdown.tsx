@@ -19,6 +19,7 @@ import { LuUser2 } from "react-icons/lu";
 
 async function LinksDropdown() {
   const user = await currentUser();
+  console.log(user?.id, "Hello THere!");
   const isUserAdmin = user?.id === process.env.ADMIN_USER_ID;
   return (
     <DropdownMenu>
