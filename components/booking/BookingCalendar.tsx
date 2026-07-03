@@ -47,7 +47,7 @@ function BookingCalendar() {
       defaultMonth={currentDate}
       selected={range}
       onSelect={setRange}
-      className='mb-4'
+      className='my-4'
       disabled={blockedPeriods}
     />
   );

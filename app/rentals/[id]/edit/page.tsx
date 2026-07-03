@@ -28,7 +28,7 @@ async function EditRentalPage({ params }: { params: { id: string } }) {
   return (
     <section>
       <h1 className='text-2xl font-semibold mb-8 capitalize'>Edit Property</h1>
-      <div className='border p-8 rounded-md'>
+      <div className='border p-4 md:p-8 rounded-md'>
         <PropertyImagesManager
           propertyId={property.id}
           name={property.name}
@@ -38,7 +38,7 @@ async function EditRentalPage({ params }: { params: { id: string } }) {
         />
         <FormContainer action={updatePropertyAction}>
           <input type='hidden' name='id' value={property.id} />
-          <div className='grid md:grid-cols-2 gap-8 mb-4 mt-8'>
+          <div className='grid md:grid-cols-2 gap-2 md:gap-8 mb-4 mt-8'>
             <FormInput
               name='name'
               type='text'
@@ -60,14 +60,14 @@ async function EditRentalPage({ params }: { params: { id: string } }) {
             labelText='Description (10 - 100 words)'
             defaultValue={property.description}
           />
-          <h3 className='text-lg mt-8 mb-4 font-medium'>
+          <h3 className='text-l mt-4 md:mt-8 mb-4 font-medium'>
             Accomodation Details
           </h3>
           <CounterInput detail='guests' defaultValue={property.guests} />
           <CounterInput detail='bedrooms' defaultValue={property.bedrooms} />
           <CounterInput detail='beds' defaultValue={property.beds} />
           <CounterInput detail='baths' defaultValue={property.baths} />
-          <h3 className='text-lg mt-10 mb-6 font-medium'>Amenity</h3>
+          <h3 className='text-lg mt-6 md:mt-10 mb-6 font-medium'>Amenities</h3>
           <AmenitiesInput defaultValue={defaultAmenities} />
           <SubmitButton text='Edit Property' className='mt-12' />
         </FormContainer>

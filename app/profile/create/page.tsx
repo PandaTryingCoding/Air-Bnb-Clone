@@ -25,7 +25,7 @@ async function CreateProfile() {
   return (
     <section>
       <h1 className='text-2xl font-semibold mb-8 capitalize'>New User</h1>
-      <div className='border p-8 rounded-md '>
+      <div className='border p-4 md:p-8 rounded-md '>
         <FormContainer action={createProfileAction}>
           <div className='grid md:grid-cols-2 mt-4 gap-4'>
             <FormInput type='text' name='firstName' label='First Name' />

@@ -17,7 +17,7 @@ import { MAX_PROPERTY_IMAGES } from "./schemas";
 import Rating from "@/components/reviews/Rating";
 import { calculateTotals } from "./calculateTotals";
 import { formatDate } from "./format";
-import { getMinCheckInForActiveHold } from "./bookingHold";
+import { getMinCheckInForActiveHold, isPendingHoldActive } from "./bookingHold";
 
 type ProfileImageResult = string | { message: string } | undefined | null;
 
@@ -67,7 +67,7 @@ const getAdminUser = async () => {
 
 export const createProfileAction = async (
   prevState: any,
-  formData: FormData
+  formData: FormData,
 ) => {
   try {
     const user = await currentUser();
@@ -130,7 +130,7 @@ export const fetchProfile = async () => {
 
 export const updateProfileAction = async (
   prevState: any,
-  formData: FormData
+  formData: FormData,
 ): Promise<{ message: string }> => {
   const user = await getAuthUser();
 
@@ -153,7 +153,7 @@ export const updateProfileAction = async (
 
 export const updateProfileImageAction = async (
   prevState: any,
-  formData: FormData
+  formData: FormData,
 ): Promise<{ message: string }> => {
   const user = await getAuthUser();
   try {
@@ -178,13 +178,13 @@ export const updateProfileImageAction = async (
 
 export const createPropertyAction = async (
   prevState: any,
-  formData: FormData
+  formData: FormData,
 ): Promise<{ message: string }> => {
   const user = await getAuthUser();
   try {
     const rawData = Object.fromEntries(formData);
     const files = (formData.getAll("images") as File[]).filter(
-      (file) => file.size > 0
+      (file) => file.size > 0,
     );
 
     const validatedFields = validateWithZodSchema(propertySchema, rawData);
@@ -193,7 +193,7 @@ export const createPropertyAction = async (
     });
 
     const uploadedUrls = await Promise.all(
-      validatedFiles.images.map((image) => uploadImage(image))
+      validatedFiles.images.map((image) => uploadImage(image)),
     );
 
     await db.property.create({
@@ -395,7 +395,7 @@ export const fetchPropertyDetails = async (id: string) => {
 
 export const createReviewAction = async (
   prevState: any,
-  formData: FormData
+  formData: FormData,
 ) => {
   const user = await getAuthUser();
   try {
@@ -496,7 +496,7 @@ export async function fetchPropertyRating(propertyId: string) {
 
 export const findExistingReview = async (
   userId: string,
-  propertyId: string
+  propertyId: string,
 ) => {
   return db.review.findFirst({
     where: {
@@ -553,7 +553,39 @@ export const createBookingAction = async (prevState: {
     return renderError(error);
   }
 
-  redirect(`/checkout?bookingId=${bookingId}&autoPay=true`);
+  redirect(`/checkout?bookingId=${bookingId}`);
+};
+
+export const fetchCheckoutBooking = async (bookingId: string) => {
+  const user = await getAuthUser();
+  await cleanupExpiredPendingBookings();
+
+  const booking = await db.booking.findUnique({
+    where: {
+      id: bookingId,
+      profileId: user.id,
+      paymentStatus: false,
+    },
+    include: {
+      property: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (!booking || !isPendingHoldActive(booking.checkIn)) {
+    return null;
+  }
+
+  return {
+    propertyName: booking.property.name,
+    totalNights: booking.totalNights,
+    checkIn: formatDate(booking.checkIn),
+    checkOut: formatDate(booking.checkOut),
+    orderTotal: booking.orderTotal,
+  };
 };
 
 export const fetchPendingBookings = async () => {
@@ -664,7 +696,7 @@ export const fetchRentals = async () => {
         totalNightSum: totalNightSum._sum.totalNights,
         orderTotalSum: orderTotalSum._sum.orderTotal,
       };
-    })
+    }),
   );
   return rentalsWithBookings;
 };
@@ -724,7 +756,7 @@ export const fetchRentalDetails = async (propertyId: string) => {
 
 export const updatePropertyAction = async (
   prevState: any,
-  formData: FormData
+  formData: FormData,
 ): Promise<{ message: string }> => {
   const user = await getAuthUser();
   const propertyId = formData.get("id") as string;
@@ -749,7 +781,7 @@ export const updatePropertyAction = async (
 
 export const deletePropertyImageAction = async (
   prevState: any,
-  formData: FormData
+  formData: FormData,
 ): Promise<{ message: string }> => {
   const user = await getAuthUser();
   const propertyId = formData.get("propertyId") as string;
@@ -837,7 +869,7 @@ export const deletePropertyImageAction = async (
 
 export const addPropertyImagesAction = async (
   prevState: any,
-  formData: FormData
+  formData: FormData,
 ): Promise<{ message: string }> => {
   const user = await getAuthUser();
   const propertyId = formData.get("propertyId") as string;
@@ -869,7 +901,7 @@ export const addPropertyImagesAction = async (
     }
 
     const files = (formData.getAll("images") as File[]).filter(
-      (file) => file.size > 0
+      (file) => file.size > 0,
     );
 
     if (files.length === 0) {
@@ -885,7 +917,7 @@ export const addPropertyImagesAction = async (
     });
 
     const uploadedUrls = await Promise.all(
-      validatedFiles.images.map((file) => uploadImage(file))
+      validatedFiles.images.map((file) => uploadImage(file)),
     );
 
     await db.propertyImage.createMany({
@@ -971,16 +1003,19 @@ export const fetchChartsData = async () => {
       createdAt: "asc",
     },
   });
-  const bookingsPerMonth = bookings.reduce((total, current) => {
-    const date = formatDate(current.createdAt, true);
-    const existingEntry = total.find((entry) => entry.date === date);
-    if (existingEntry) {
-      existingEntry.count += 1;
-    } else {
-      total.push({ date, count: 1 });
-    }
-    return total;
-  }, [] as Array<{ date: string; count: number }>);
+  const bookingsPerMonth = bookings.reduce(
+    (total, current) => {
+      const date = formatDate(current.createdAt, true);
+      const existingEntry = total.find((entry) => entry.date === date);
+      if (existingEntry) {
+        existingEntry.count += 1;
+      } else {
+        total.push({ date, count: 1 });
+      }
+      return total;
+    },
+    [] as Array<{ date: string; count: number }>,
+  );
   return bookingsPerMonth;
 };
 

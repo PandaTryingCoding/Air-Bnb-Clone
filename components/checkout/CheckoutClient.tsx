@@ -1,24 +1,24 @@
 "use client";
 
-import Script from "next/script";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/utils/format";
+
+export type CheckoutBooking = {
+  propertyName: string;
+  totalNights: number;
+  checkIn: string;
+  checkOut: string;
+  orderTotal: number;
+};
 
 type PaymentOrderResponse = {
   orderId: string;
   amount: number;
   currency: string;
   keyId: string;
-  booking: {
-    propertyName: string;
-    totalNights: number;
-    checkIn: string;
-    checkOut: string;
-    orderTotal: number;
-  };
   prefill: {
     name: string;
     email: string;
@@ -61,21 +61,51 @@ declare global {
   }
 }
 
-function CheckoutClient() {
-  const searchParams = useSearchParams();
+const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
+
+const loadRazorpayScript = () => {
+  if (window.Razorpay) {
+    return Promise.resolve();
+  }
+
+  const existingScript = document.querySelector(
+    `script[src="${RAZORPAY_SCRIPT_URL}"]`,
+  );
+
+  if (existingScript) {
+    if (window.Razorpay) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      existingScript.addEventListener("load", () => resolve());
+      existingScript.addEventListener("error", () =>
+        reject(new Error("Unable to load payment gateway")),
+      );
+    });
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = RAZORPAY_SCRIPT_URL;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Unable to load payment gateway"));
+    document.body.appendChild(script);
+  });
+};
+
+type CheckoutClientProps = {
+  bookingId: string;
+  booking: CheckoutBooking;
+};
+
+function CheckoutClient({ bookingId, booking }: CheckoutClientProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const bookingId = searchParams.get("bookingId");
-  const shouldAutoPay = searchParams.get("autoPay") === "true";
-  const [order, setOrder] = useState<PaymentOrderResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
-  const [scriptReady, setScriptReady] = useState(false);
-  const hasAutoOpened = useRef(false);
 
   const fetchOrder = useCallback(async () => {
-    if (!bookingId) return null;
-
     const response = await fetch("/api/payment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -89,25 +119,6 @@ function CheckoutClient() {
 
     return data as PaymentOrderResponse;
   }, [bookingId]);
-
-  useEffect(() => {
-    if (!bookingId) {
-      setLoading(false);
-      return;
-    }
-
-    fetchOrder()
-      .then((data) => {
-        if (data) setOrder(data);
-      })
-      .catch((error: Error) => {
-        toast({
-          description: error.message,
-          variant: "destructive",
-        });
-      })
-      .finally(() => setLoading(false));
-  }, [bookingId, fetchOrder, toast]);
 
   const verifyPayment = useCallback(
     async (response: RazorpaySuccessResponse) => {
@@ -133,23 +144,19 @@ function CheckoutClient() {
     [bookingId, router, toast],
   );
 
-  const openRazorpay = useCallback(async () => {
-    if (!bookingId || !scriptReady || !window.Razorpay) return;
-
+  const handlePayClick = async () => {
     setPaying(true);
 
     try {
+      await loadRazorpayScript();
       const paymentOrder = await fetchOrder();
-      if (!paymentOrder) return;
-
-      setOrder(paymentOrder);
 
       const options: RazorpayOptions = {
         key: paymentOrder.keyId,
         amount: paymentOrder.amount,
         currency: paymentOrder.currency,
         name: "Air BNB",
-        description: `${paymentOrder.booking.propertyName} — ${paymentOrder.booking.totalNights} night(s)`,
+        description: `${booking.propertyName} — ${booking.totalNights} night(s)`,
         order_id: paymentOrder.orderId,
         prefill: paymentOrder.prefill,
         theme: { color: "#F97215" },
@@ -183,100 +190,47 @@ function CheckoutClient() {
         variant: "destructive",
       });
     }
-  }, [bookingId, scriptReady, toast, verifyPayment, fetchOrder]);
-
-  useEffect(() => {
-    if (!shouldAutoPay || !order || !scriptReady || hasAutoOpened.current) {
-      return;
-    }
-    hasAutoOpened.current = true;
-    openRazorpay();
-  }, [shouldAutoPay, order, scriptReady, openRazorpay]);
-
-  if (!bookingId) {
-    return (
-      <section className='max-w-lg mx-auto text-center space-y-4'>
-        <h1 className='text-3xl font-semibold'>Checkout</h1>
-        <p className='text-muted-foreground'>No booking selected.</p>
-        <Button onClick={() => router.push("/")}>Browse properties</Button>
-      </section>
-    );
-  }
-
-  if (loading) {
-    return (
-      <section className='max-w-lg mx-auto text-center space-y-4'>
-        <h1 className='text-3xl font-semibold'>Checkout</h1>
-        <p className='text-muted-foreground'>Preparing your payment...</p>
-      </section>
-    );
-  }
-
-  if (!order) {
-    return (
-      <section className='max-w-lg mx-auto text-center space-y-4'>
-        <h1 className='text-3xl font-semibold'>Checkout</h1>
-        <p className='text-muted-foreground'>
-          We couldn&apos;t load this booking. It may have expired or already
-          been paid.
-        </p>
-        <Button onClick={() => router.push("/bookings")}>View bookings</Button>
-      </section>
-    );
-  }
+  };
 
   return (
-    <>
-      <Script
-        src='https://checkout.razorpay.com/v1/checkout.js'
-        strategy='lazyOnload'
-        onLoad={() => setScriptReady(true)}
-      />
-      <section className='max-w-lg mx-auto space-y-6'>
-        <div className='text-center space-y-2'>
-          <h1 className='text-3xl font-semibold'>Complete your booking</h1>
-          <p className='text-muted-foreground'>
-            Pay securely to confirm your reservation. You can return here anytime
-            before the payment deadline to finish checkout.
-          </p>
-        </div>
+    <section className='max-w-lg mx-auto space-y-6'>
+      <div className='text-center space-y-2'>
+        <h1 className='text-3xl font-semibold'>Complete your booking</h1>
+        <p className='text-muted-foreground'>
+          Pay securely to confirm your reservation. You can return here anytime
+          before the payment deadline to finish checkout.
+        </p>
+      </div>
 
-        <div className='rounded-lg border bg-muted/40 p-6 space-y-3'>
-          <div className='flex justify-between gap-4'>
-            <span className='text-muted-foreground'>Property</span>
-            <span className='font-medium text-right'>
-              {order.booking.propertyName}
-            </span>
-          </div>
-          <div className='flex justify-between gap-4'>
-            <span className='text-muted-foreground'>Nights</span>
-            <span className='font-medium'>{order.booking.totalNights}</span>
-          </div>
-          <div className='flex justify-between gap-4'>
-            <span className='text-muted-foreground'>Check in</span>
-            <span className='font-medium'>{order.booking.checkIn}</span>
-          </div>
-          <div className='flex justify-between gap-4'>
-            <span className='text-muted-foreground'>Check out</span>
-            <span className='font-medium'>{order.booking.checkOut}</span>
-          </div>
-          <div className='flex justify-between gap-4 border-t pt-3'>
-            <span className='font-semibold'>Total</span>
-            <span className='font-semibold text-primary'>
-              {formatCurrency(order.booking.orderTotal)}
-            </span>
-          </div>
+      <div className='rounded-lg border bg-muted/40 p-6 space-y-3'>
+        <div className='flex justify-between gap-4'>
+          <span className='text-muted-foreground'>Property</span>
+          <span className='font-medium text-right'>{booking.propertyName}</span>
         </div>
+        <div className='flex justify-between gap-4'>
+          <span className='text-muted-foreground'>Nights</span>
+          <span className='font-medium'>{booking.totalNights}</span>
+        </div>
+        <div className='flex justify-between gap-4'>
+          <span className='text-muted-foreground'>Check in</span>
+          <span className='font-medium'>{booking.checkIn}</span>
+        </div>
+        <div className='flex justify-between gap-4'>
+          <span className='text-muted-foreground'>Check out</span>
+          <span className='font-medium'>{booking.checkOut}</span>
+        </div>
+        <div className='flex justify-between gap-4 border-t pt-3'>
+          <span className='font-semibold'>Total</span>
+          <span className='font-semibold text-primary'>
+            {formatCurrency(booking.orderTotal)}
+          </span>
+        </div>
+      </div>
 
-        <Button
-          className='w-full'
-          onClick={openRazorpay}
-          disabled={!scriptReady || paying}
-        >
-          {paying ? "Processing..." : "Pay now"}
-        </Button>
-      </section>
-    </>
+      <Button className='w-full' onClick={handlePayClick} disabled={paying}>
+        {paying ? "Opening payment..." : "Pay now"}
+      </Button>
+    </section>
   );
 }
 
