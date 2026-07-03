@@ -53,12 +53,12 @@ function PropertyCardCarousel({
         <>
           <CarouselPrevious
             type='button'
-            className='left-3 top-1/2 z-10 -translate-y-1/2 border-none bg-white/90 shadow-md hover:bg-white'
+            className='left-3 z-10'
             onPointerDown={(event) => event.stopPropagation()}
           />
           <CarouselNext
             type='button'
-            className='right-3 top-1/2 z-10 -translate-y-1/2 border-none bg-white/90 shadow-md hover:bg-white'
+            className='right-3 z-10'
             onPointerDown={(event) => event.stopPropagation()}
           />
         </>
