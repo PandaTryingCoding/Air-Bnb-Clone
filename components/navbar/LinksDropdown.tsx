@@ -1,72 +1,19 @@
-import React, { Suspense } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { LuAlignLeft } from "react-icons/lu";
-import Link from "next/link";
-import { Button } from "../ui/button";
-import UserIcon from "./UserIcon";
-import { links } from "@/utils/links";
-import SignoutLink from "./SignoutLink";
-import { SignedOut, SignedIn, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { currentUser } from "@clerk/nextjs/server";
-
-import { LuUser2 } from "react-icons/lu";
+import { fetchProfileImage } from "@/utils/actions";
+import LinksDropdownMenu from "./LinksDropdownMenu";
 
 async function LinksDropdown() {
   const user = await currentUser();
-  console.log(user?.id, "Hello THere!");
   const isUserAdmin = user?.id === process.env.ADMIN_USER_ID;
+  const profileImageResult = await fetchProfileImage();
+  const profileImage =
+    typeof profileImageResult === "string" ? profileImageResult : null;
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant={"outline"} className='flex gap-4 max-w-[100px]'>
-          <LuAlignLeft className='w-6 h-6' />
-          <Suspense
-            fallback={
-              <LuUser2 className='w-6 h-6 bg-primary rounded-full text-white' />
-            }
-          >
-            <UserIcon />
-          </Suspense>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className='w-52' align='start' sideOffset={10}>
-        <SignedOut>
-          <DropdownMenuItem>
-            <SignInButton mode='modal'>
-              <button className='w-full text-left'>Login</button>
-            </SignInButton>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <SignUpButton mode='modal'>
-              <button className='w-full text-left'>Register</button>
-            </SignUpButton>
-          </DropdownMenuItem>
-        </SignedOut>
-        <SignedIn>
-          {links.map((link) => {
-            if (link.label === "admin" && !isUserAdmin) return null;
-            return (
-              <DropdownMenuItem key={link.href}>
-                <Link href={link.href} className='capitalize w-full'>
-                  {link.label}
-                </Link>
-              </DropdownMenuItem>
-            );
-          })}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <SignoutLink />
-          </DropdownMenuItem>
-        </SignedIn>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <LinksDropdownMenu
+      isUserAdmin={!!isUserAdmin}
+      profileImage={profileImage}
+    />
   );
 }
 
