@@ -6,6 +6,7 @@ import EmptyList from "@/components/home/EmptyList";
 import CountryFlagAndName from "@/components/card/CountryFlagAndName";
 
 import { formatDate, formatCurrency } from "@/utils/format";
+import { getPaymentDeadline } from "@/utils/bookingHold";
 import {
   Table,
   TableBody,
@@ -29,24 +30,37 @@ async function ReservationsPage() {
           total reservations : {reservations.length}
         </h4>
         <Table>
-          <TableCaption>A list of recent reservations</TableCaption>
+          <TableCaption>
+            Confirmed and pending reservations on your properties
+          </TableCaption>
           <TableHeader>
             <TableRow>
               <TableHead>Property Name</TableHead>
               <TableHead>Country</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Nights</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Check In</TableHead>
               <TableHead>Check Out</TableHead>
+              <TableHead>Pay by</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {reservations.map((item) => {
-              const { id, orderTotal, totalNights, checkIn, checkOut } = item;
+              const {
+                id,
+                orderTotal,
+                totalNights,
+                checkIn,
+                checkOut,
+                paymentStatus,
+              } = item;
               const { id: propertyId, name, country } = item.property;
+              const isPending = !paymentStatus;
+              const payBy = isPending
+                ? formatDate(getPaymentDeadline(checkIn))
+                : "—";
 
-              const startDate = formatDate(checkIn);
-              const endDate = formatDate(checkOut);
               return (
                 <TableRow key={id}>
                   <TableCell>
@@ -60,10 +74,22 @@ async function ReservationsPage() {
                   <TableCell>
                     <CountryFlagAndName countryCode={country} />
                   </TableCell>
+                  <TableCell>
+                    <span
+                      className={
+                        isPending
+                          ? "text-amber-600 font-medium capitalize"
+                          : "text-green-600 font-medium capitalize"
+                      }
+                    >
+                      {isPending ? "pending payment" : "confirmed"}
+                    </span>
+                  </TableCell>
                   <TableCell>{totalNights}</TableCell>
                   <TableCell>{formatCurrency(orderTotal)}</TableCell>
-                  <TableCell>{startDate}</TableCell>
-                  <TableCell>{endDate}</TableCell>
+                  <TableCell>{formatDate(checkIn)}</TableCell>
+                  <TableCell>{formatDate(checkOut)}</TableCell>
+                  <TableCell>{payBy}</TableCell>
                 </TableRow>
               );
             })}

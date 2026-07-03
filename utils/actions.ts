@@ -17,8 +17,19 @@ import { MAX_PROPERTY_IMAGES } from "./schemas";
 import Rating from "@/components/reviews/Rating";
 import { calculateTotals } from "./calculateTotals";
 import { formatDate } from "./format";
+import { getMinCheckInForActiveHold } from "./bookingHold";
 
 type ProfileImageResult = string | { message: string } | undefined | null;
+
+const cleanupExpiredPendingBookings = async () => {
+  const minCheckIn = getMinCheckInForActiveHold();
+  await db.booking.deleteMany({
+    where: {
+      paymentStatus: false,
+      checkIn: { lt: minCheckIn },
+    },
+  });
+};
 
 const renderError = (error: unknown): { message: string } => {
   return {
@@ -347,7 +358,13 @@ export const fetchPropertyDetails = async (id: string) => {
       profile: true,
       bookings: {
         where: {
-          paymentStatus: true,
+          OR: [
+            { paymentStatus: true },
+            {
+              paymentStatus: false,
+              checkIn: { gte: getMinCheckInForActiveHold() },
+            },
+          ],
         },
         select: {
           checkIn: true,
@@ -509,6 +526,8 @@ export const createBookingAction = async (prevState: {
     price: property.price,
   });
 
+  await cleanupExpiredPendingBookings();
+
   await db.booking.deleteMany({
     where: {
       profileId: user.id,
@@ -534,11 +553,40 @@ export const createBookingAction = async (prevState: {
     return renderError(error);
   }
 
-  redirect(`/checkout?bookingId=${bookingId}`);
+  redirect(`/checkout?bookingId=${bookingId}&autoPay=true`);
+};
+
+export const fetchPendingBookings = async () => {
+  const user = await getAuthUser();
+  await cleanupExpiredPendingBookings();
+
+  const minCheckIn = getMinCheckInForActiveHold();
+
+  const bookings = await db.booking.findMany({
+    where: {
+      profileId: user.id,
+      paymentStatus: false,
+      checkIn: { gte: minCheckIn },
+    },
+    include: {
+      property: {
+        select: {
+          id: true,
+          name: true,
+          country: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  return bookings;
 };
 
 export const fetchBookings = async () => {
   const user = await getAuthUser();
+  await cleanupExpiredPendingBookings();
 
   const bookings = await db.booking.findMany({
     where: {
@@ -858,13 +906,22 @@ export const addPropertyImagesAction = async (
 
 export const fetchReservations = async () => {
   const user = await getAuthUser();
+  await cleanupExpiredPendingBookings();
+
+  const minCheckIn = getMinCheckInForActiveHold();
 
   const reservations = await db.booking.findMany({
     where: {
-      paymentStatus: true,
       property: {
         profileId: user.id,
       },
+      OR: [
+        { paymentStatus: true },
+        {
+          paymentStatus: false,
+          checkIn: { gte: minCheckIn },
+        },
+      ],
     },
     orderBy: {
       createdAt: "desc",
