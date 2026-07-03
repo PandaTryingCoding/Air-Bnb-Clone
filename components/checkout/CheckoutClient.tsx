@@ -66,6 +66,7 @@ function CheckoutClient() {
   const router = useRouter();
   const { toast } = useToast();
   const bookingId = searchParams.get("bookingId");
+  const shouldAutoPay = searchParams.get("autoPay") === "true";
   const [order, setOrder] = useState<PaymentOrderResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
@@ -133,19 +134,24 @@ function CheckoutClient() {
   );
 
   const openRazorpay = useCallback(async () => {
-    if (!bookingId || !order || !scriptReady || !window.Razorpay) return;
+    if (!bookingId || !scriptReady || !window.Razorpay) return;
 
     setPaying(true);
 
     try {
+      const paymentOrder = await fetchOrder();
+      if (!paymentOrder) return;
+
+      setOrder(paymentOrder);
+
       const options: RazorpayOptions = {
-        key: order.keyId,
-        amount: order.amount,
-        currency: order.currency,
+        key: paymentOrder.keyId,
+        amount: paymentOrder.amount,
+        currency: paymentOrder.currency,
         name: "Air BNB",
-        description: `${order.booking.propertyName} — ${order.booking.totalNights} night(s)`,
-        order_id: order.orderId,
-        prefill: order.prefill,
+        description: `${paymentOrder.booking.propertyName} — ${paymentOrder.booking.totalNights} night(s)`,
+        order_id: paymentOrder.orderId,
+        prefill: paymentOrder.prefill,
         theme: { color: "#F97215" },
         handler: async (response) => {
           try {
@@ -177,13 +183,15 @@ function CheckoutClient() {
         variant: "destructive",
       });
     }
-  }, [bookingId, order, scriptReady, toast, verifyPayment]);
+  }, [bookingId, scriptReady, toast, verifyPayment, fetchOrder]);
 
   useEffect(() => {
-    if (!order || !scriptReady || hasAutoOpened.current) return;
+    if (!shouldAutoPay || !order || !scriptReady || hasAutoOpened.current) {
+      return;
+    }
     hasAutoOpened.current = true;
     openRazorpay();
-  }, [order, scriptReady, openRazorpay]);
+  }, [shouldAutoPay, order, scriptReady, openRazorpay]);
 
   if (!bookingId) {
     return (
@@ -228,7 +236,8 @@ function CheckoutClient() {
         <div className='text-center space-y-2'>
           <h1 className='text-3xl font-semibold'>Complete your booking</h1>
           <p className='text-muted-foreground'>
-            Pay securely to confirm your reservation.
+            Pay securely to confirm your reservation. You can return here anytime
+            before the payment deadline to finish checkout.
           </p>
         </div>
 

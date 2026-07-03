@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import db from "@/utils/db";
 import { formatDate } from "@/utils/format";
 import { getRazorpayInstance, toPaise } from "@/utils/razorpay";
+import { isPendingHoldActive } from "@/utils/bookingHold";
 
 export const POST = async (req: Request) => {
   const { userId } = auth();
@@ -39,6 +40,16 @@ export const POST = async (req: Request) => {
     return NextResponse.json(
       { message: "Booking is already paid" },
       { status: 400 }
+    );
+  }
+
+  if (!isPendingHoldActive(booking.checkIn)) {
+    await db.booking.delete({
+      where: { id: bookingId },
+    });
+    return NextResponse.json(
+      { message: "Payment window has expired for this reservation" },
+      { status: 410 }
     );
   }
 
