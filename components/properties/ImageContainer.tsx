@@ -24,7 +24,7 @@ function ImageContainer({ images, name }: ImageContainerProps) {
 
   const showAllPhotosButtonClass = cn(
     buttonVariants({ variant: "outline", size: "sm" }),
-    "gap-2 font-semibold shadow-md backdrop-blur-sm bg-background/95"
+    "gap-2 font-semibold shadow-md backdrop-blur-sm bg-background/95",
   );
 
   const markImageLoaded = (imageIndex: number) => {
@@ -72,7 +72,8 @@ function ImageContainer({ images, name }: ImageContainerProps) {
 
             const isCover = slot.imageIndex === 0;
             const isLoaded = loadedImages.has(slot.imageIndex);
-            const showMoreOverlay = hasMorePhotos && slotIndex === lastSlotIndex;
+            const showMoreOverlay =
+              hasMorePhotos && slotIndex === lastSlotIndex;
 
             return (
               <button
@@ -102,8 +103,8 @@ function ImageContainer({ images, name }: ImageContainerProps) {
                 {showMoreOverlay && isLoaded && (
                   <div className='absolute inset-0 flex items-center justify-center bg-black/50'>
                     <span className='flex items-center gap-2 text-sm font-semibold text-white'>
-                      <BsGrid3X3Gap className='h-4 w-4' />
-                      +{extraPhotoCount} more
+                      <BsGrid3X3Gap className='h-4 w-4' />+{extraPhotoCount}{" "}
+                      more
                     </span>
                   </div>
                 )}
@@ -124,7 +125,7 @@ function ImageContainer({ images, name }: ImageContainerProps) {
       </section>
 
       {/* Mobile — cover only */}
-      <section className='relative mt-8 md:hidden'>
+      <section className='relative mt-6 md:hidden'>
         <button
           type='button'
           onClick={() => setShowGallery(true)}
@@ -147,7 +148,7 @@ function ImageContainer({ images, name }: ImageContainerProps) {
           <div
             className={cn(
               showAllPhotosButtonClass,
-              "absolute bottom-4 right-4 pointer-events-none"
+              "absolute bottom-4 right-4 pointer-events-none",
             )}
           >
             <BsGrid3X3Gap className='h-4 w-4' />

@@ -18,9 +18,9 @@ type ChartPropsType = {
 
 function Charts({ data }: ChartPropsType) {
   return (
-    <section className='mt-24'>
+    <section className='mt-12 md:mt-24'>
       <h1 className='text-4xl font-semibold text-center'>Monthly Bookings</h1>
-      <ResponsiveContainer width='100%' height={300}>
+      <ResponsiveContainer width='100%' height={300} className={"ml-[-1.5rem]"}>
         <BarChart data={data} margin={{ top: 50 }}>
           <CartesianGrid strokeDasharray='3 3' />
           <XAxis dataKey='date' />

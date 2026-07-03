@@ -10,7 +10,7 @@ function PropertyDetailsLoading() {
       <Skeleton className='h-4 w-48' />
       <div className='mt-4 flex items-center justify-between'>
         <Skeleton className='h-10 w-2/3 max-w-xl' />
-        <div className='flex gap-4'>
+        <div className='flex flex-col md:flex-row items-center gap-4'>
           <Skeleton className='h-10 w-10 rounded-full' />
           <Skeleton className='h-10 w-10 rounded-full' />
         </div>

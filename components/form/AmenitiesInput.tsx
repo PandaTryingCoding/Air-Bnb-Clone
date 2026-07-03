@@ -15,7 +15,7 @@ function AmenitiesInput({ defaultValue }: { defaultValue?: Amenity[] }) {
     };
   });
   const [selectedAmenities, setSelectedAmenities] = useState<Amenity[]>(
-    amenitiesWithIcons || conservativeAmenities
+    amenitiesWithIcons || conservativeAmenities,
   );
   const handleChange = (amenity: Amenity) => {
     setSelectedAmenities((prev) => {
@@ -48,7 +48,8 @@ function AmenitiesInput({ defaultValue }: { defaultValue?: Amenity[] }) {
                 htmlFor={amenity.name}
                 className='text-sm font-medium leading-none capitalize flex gap-x-2 items-center'
               >
-                {amenity.name} <amenity.icon className='w-4 h-4' />
+                <p className='max-w-[100px] truncate'>{amenity.name}</p>{" "}
+                <amenity.icon className='w-4 h-4' />
               </label>
             </div>
           );

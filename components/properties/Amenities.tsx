@@ -11,15 +11,15 @@ const Amenities = ({ amenities }: { amenities: string }) => {
   return (
     <div className='mt-4'>
       <Title text='What this place offers' />
-      <div className='grid md:grid-cols-2 gap-x-4'>
+      <div className='grid grid-cols-2 gap-x-4'>
         {amenitiesList.map((amenity) => {
           if (!amenity.selected) return null;
           return (
             <div key={amenity.name} className='flex items-center gap-x-4 mb-2'>
-              <LuFolderCheck className='h-6 w-6 text-primary' />
-              <span className='font-medium text-sm capitalize'>
+              <LuFolderCheck className='!h-6 !w-6 text-primary' />
+              <div className='font-medium text-sm capitalize truncate'>
                 {amenity.name}
-              </span>
+              </div>
             </div>
           );
         })}

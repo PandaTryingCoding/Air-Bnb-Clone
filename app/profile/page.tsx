@@ -25,7 +25,7 @@ async function ProfilePage() {
           text='Update Profile Image'
         />
         <FormContainer action={updateProfileAction}>
-          <div className='grid md:grid-cols-2 mt-4 gap-4'>
+          <div className='grid md:grid-cols-2 mt-4 gap-2 md:gap-4'>
             <FormInput
               type='text'
               name='firstName'

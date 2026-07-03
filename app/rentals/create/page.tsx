@@ -17,10 +17,10 @@ function CreatePropertyPage() {
       <h1 className='text-2xl font-semibold mb-8 capitalize'>
         Create Property
       </h1>
-      <div className='border p-8 rounded'>
+      <div className='border p-4 md:p-8 rounded-md'>
         <h3 className='text-lg mb-4 font-medium'>General Info</h3>
         <FormContainer action={createPropertyAction}>
-          <div className='grid md:grid-cols-2 gap-8 mb-4'>
+          <div className='grid md:grid-cols-2 gap-2 md:gap-8 mb-4'>
             <FormInput
               name='name'
               type='text'
@@ -43,16 +43,18 @@ function CreatePropertyPage() {
             name='description'
             labelText='Description (10-1000 words)'
           />
-          <div className='grid sm:grid-cols-2 gap-8 mt-4'>
+          <div className='grid sm:grid-cols-2 gap-2 md:gap-8 mt-4'>
             <CountriesInput />
             <PropertyImagesInput />
           </div>
-          <h3 className='text-l mt-8 mb-4 font-medium'>Accomodation Details</h3>
+          <h3 className='text-l mt-4 md:mt-8 mb-4 font-medium'>
+            Accomodation Details
+          </h3>
           <CounterInput detail='guests' />
           <CounterInput detail='bedrooms' />
           <CounterInput detail='beds' />
           <CounterInput detail='baths' />
-          <h3 className='text-lg mt-10 mb-6 font-medium'>Amenities</h3>
+          <h3 className='text-lg mt-6 md:mt-10 mb-6 font-medium'>Amenities</h3>
           <AmenitiesInput />
           <SubmitButton text='Create Rental' className='mt-12' />
         </FormContainer>
