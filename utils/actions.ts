@@ -520,6 +520,14 @@ export const createBookingAction = async (prevState: {
   if (!property) {
     return { message: "Property Not Found" };
   }
+
+  if (!isPendingHoldActive(checkIn)) {
+    return {
+      message:
+        "Please choose a check-in date at least 4 days from today so payment can be completed in time.",
+    };
+  }
+
   const { orderTotal, totalNights } = calculateTotals({
     checkIn,
     checkOut,
@@ -558,9 +566,18 @@ export const createBookingAction = async (prevState: {
 
 export const fetchCheckoutBooking = async (bookingId: string) => {
   const user = await getAuthUser();
-  await cleanupExpiredPendingBookings();
 
-  const booking = await db.booking.findUnique({
+  // Clean up other expired holds, but never delete the booking being checked out.
+  const minCheckIn = getMinCheckInForActiveHold();
+  await db.booking.deleteMany({
+    where: {
+      paymentStatus: false,
+      checkIn: { lt: minCheckIn },
+      NOT: { id: bookingId },
+    },
+  });
+
+  const booking = await db.booking.findFirst({
     where: {
       id: bookingId,
       profileId: user.id,
@@ -575,7 +592,7 @@ export const fetchCheckoutBooking = async (bookingId: string) => {
     },
   });
 
-  if (!booking || !isPendingHoldActive(booking.checkIn)) {
+  if (!booking) {
     return null;
   }
 
