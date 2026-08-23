@@ -1,5 +1,6 @@
 import { DateRange } from "react-day-picker";
 import { Booking } from "@/utils/types";
+import { getMinCheckInForActiveHold } from "@/utils/bookingHold";
 
 export const defaultSelected: DateRange = {
   from: undefined,
@@ -15,6 +16,11 @@ export const generateBlockedPeriods = ({
 }) => {
   today.setHours(0, 0, 0, 0); // Set the time to 00:00:00.000
 
+  // Unpaid holds require check-in at least 4 days out — block earlier dates.
+  const minCheckIn = getMinCheckInForActiveHold();
+  const lastUnavailableDay = new Date(minCheckIn);
+  lastUnavailableDay.setDate(lastUnavailableDay.getDate() - 1);
+
   const disabledDays: DateRange[] = [
     ...bookings.map((booking) => ({
       from: booking.checkIn,
@@ -22,7 +28,7 @@ export const generateBlockedPeriods = ({
     })),
     {
       from: new Date(0), // This is 01 January 1970 00:00:00 UTC.
-      to: new Date(today.getTime() - 24 * 60 * 60 * 1000), // This is yesterday.
+      to: lastUnavailableDay,
     },
   ];
   return disabledDays;
